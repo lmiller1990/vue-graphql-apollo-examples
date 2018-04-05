@@ -1,27 +1,54 @@
 const express = require('express')
+const cors = require('cors')
 const bodyParser = require('body-parser')
 const { graphqlExpress, graphiqlExpress } = require('apollo-server-express')
 const { makeExecutableSchema } = require('graphql-tools')
-
-const Book = require('./book')
-
-const books = [
-  new Book('Harry Potter', 'JK Rowling'),
-  new Book('Lord of the Rings', 'JRR Tolkien')
-]
+const books = require('./mockData')
 
 const typeDefs = `
   type Query { 
+    genres: [Genre]
     books: [Book] 
+    book(id: ID!): Book
+  }
+
+  type Genre {
+    id: ID!
+    name: String
   }
 
   type Book { 
-    title: String, author: String 
+    id: ID!
+    title: String
+    author: String 
+    genre: Genre
   }
 `
 
+const delay = () => new Promise(res => {
+  setTimeout(() => {
+    res(true)
+  }, 1000)
+})
+
+
 const rootValue = {
-  Query: { books: () => books },
+  Query: { 
+    genres: async () => {
+      await delay()
+      return genres
+    },
+
+    books: async () => {
+      await delay()
+      return books
+    },
+
+    book: async (_, { id }, ctx, info) => {
+      await delay()
+      return books.find(x => x.id === parseInt(id))
+    }
+  },
 }
 
 const schema = makeExecutableSchema({
@@ -30,6 +57,7 @@ const schema = makeExecutableSchema({
 })
 
 const app = express()
+app.use(cors())
 
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }))
 

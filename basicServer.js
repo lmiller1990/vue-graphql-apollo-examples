@@ -2,27 +2,27 @@ const express = require('express')
 const { graphql, buildSchema } = require('graphql')
 const graphqlHTTP = require('express-graphql')
 const cors = require('cors')
-const Book = require('./book')
+const books = require('./mockData')
 
 const schema = buildSchema(`
   type Query {
     books: [Book]
+    book(id: ID!): Book
   }
 
   type Book {
-    title: String
-    author: String
+    id: ID!, title: String, author: String
   }
 `)
 
 
-const books = [
-  new Book('Harry Potter', 'JK Rowling'),
-  new Book('Lord of the Rings', 'JRR Tolkien')
-]
-
 const rootValue = {
-  books: () => books
+  books: () => books,
+
+  book: ({ id }) => {
+    console.log('Fetching id', id)
+    return books.find(x => x.id === parseInt(id))
+  }
 }
 
 const app = express()
